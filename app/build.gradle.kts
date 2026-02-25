@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.yuen.encuestasockets"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.yuen.encuestasockets"
@@ -49,6 +49,10 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    
+    implementation("androidx.navigation:navigation-compose:2.8.5")
+    implementation(libs.androidx.navigation.compose.android)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

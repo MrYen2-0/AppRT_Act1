@@ -7,11 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.yuen.encuestasockets.ui.theme.EncuestaSocketsTheme
+import androidx.navigation.compose.rememberNavController
+import com.yuen.encuestasockets.core.navigation.AppNavigation
+import com.yuen.encuestasockets.core.ui.theme.EncuestaSocketsTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,8 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             EncuestaSocketsTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    EncuestaSocketsApp(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -31,17 +30,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    EncuestaSocketsTheme {
-        Greeting("Android")
-    }
+fun EncuestaSocketsApp(modifier: Modifier = Modifier) {
+    val navController = rememberNavController()
+    AppNavigation(navController = navController)
 }
