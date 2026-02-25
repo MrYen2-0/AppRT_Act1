@@ -1,4 +1,4 @@
-package com.yuen.encuestasockets.ui.theme
+package com.yuen.ahorcado.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
