@@ -17,10 +17,10 @@ import com.yuen.encuestasockets.feature.auth.presentation.viewmodel.AuthViewMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
+fun RegistroScreen(
     viewModel: AuthViewModel,
-    onLoginSuccess: (String) -> Unit,
-    onNavigateToRegistro: () -> Unit
+    onRegistroSuccess: (String) -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -33,7 +33,7 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Iniciar Sesión",
+            text = "Registro",
             color = Color.White,
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold
@@ -53,7 +53,14 @@ fun LoginScreen(
             ),
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.error != null,
-            enabled = !uiState.isLoading
+            enabled = !uiState.isLoading,
+            supportingText = {
+                Text(
+                    text = "Mínimo 3 caracteres, solo letras, números, - y _",
+                    color = Color.Gray,
+                    fontSize = 11.sp
+                )
+            }
         )
 
         if (uiState.error != null) {
@@ -69,7 +76,7 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                viewModel.login(onSuccess = onLoginSuccess)
+                viewModel.registro(onSuccess = onRegistroSuccess)
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF00C853)
@@ -87,7 +94,7 @@ fun LoginScreen(
                 )
             } else {
                 Text(
-                    text = "Ingresar",
+                    text = "Registrarse",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -97,11 +104,11 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(
-            onClick = onNavigateToRegistro,
+            onClick = onNavigateToLogin,
             enabled = !uiState.isLoading
         ) {
             Text(
-                text = "¿No tienes cuenta? Regístrate",
+                text = "¿Ya tienes cuenta? Inicia sesión",
                 color = Color(0xFF00C853),
                 fontSize = 14.sp
             )
