@@ -2,6 +2,7 @@ package com.yuen.encuestasockets.core.navigation
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
+    object Registro : Screen("registro")
     object EncuestasList : Screen("encuestas_list/{username}") {
         fun createRoute(username: String) = "encuestas_list/$username"
     }
