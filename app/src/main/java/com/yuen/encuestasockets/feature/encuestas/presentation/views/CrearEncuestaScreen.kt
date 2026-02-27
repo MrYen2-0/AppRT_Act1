@@ -127,7 +127,6 @@ fun CrearEncuestaScreen(
             Button(
                 onClick = {
                     viewModel.crearEncuesta(
-                        username = "usuario1",
                         onSuccess = onCrear
                     )
                 },

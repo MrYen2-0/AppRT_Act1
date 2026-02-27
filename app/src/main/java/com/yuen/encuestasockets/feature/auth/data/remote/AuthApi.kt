@@ -6,11 +6,12 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import javax.inject.Inject
 
-class AuthApi(private val client: HttpClient) {
+class AuthApi @Inject constructor(private val client: HttpClient) {
 
     companion object {
-        private const val BASE_URL = "http://10.0.2.2:8000"
+        private const val BASE_URL = "http://54.226.172.181:8000"
     }
 
     suspend fun registro(username: String): Result<RegistroResponse> {
