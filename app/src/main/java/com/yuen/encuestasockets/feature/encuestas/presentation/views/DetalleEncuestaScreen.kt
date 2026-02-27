@@ -19,6 +19,7 @@ import com.yuen.encuestasockets.feature.encuestas.presentation.viewmodel.Encuest
 @Composable
 fun DetalleEncuestaScreen(
     encuestaId: Int,
+    usuarioId: Int,
     viewModel: EncuestasViewModel,
     onBack: () -> Unit
 ) {
@@ -46,7 +47,16 @@ fun DetalleEncuestaScreen(
             )
         }
     ) { padding ->
-        if (encuesta != null) {
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF00C853))
+            }
+        } else if (encuesta != null) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -72,13 +82,12 @@ fun DetalleEncuestaScreen(
 
                 encuesta.opciones.forEach { opcion ->
                     val porcentaje = if (totalVotos > 0) opcion.votos.toFloat() / totalVotos else 0f
-                    OpcionEncuesta(
+                    OpcionEncuestaItem(
                         texto = opcion.texto,
                         votos = opcion.votos,
                         porcentaje = porcentaje,
-                        isSelected = opcion.votantes.contains("usuario1"),
                         onClick = {
-                            viewModel.votarOpcion(opcion.id, "usuario1")
+                            viewModel.votarOpcion(opcion.id, usuarioId)
                         }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -87,7 +96,7 @@ fun DetalleEncuestaScreen(
                 Spacer(modifier = Modifier.weight(1f))
 
                 Text(
-                    text = encuesta.timestamp,
+                    text = encuesta.creadoEn,
                     color = Color.Gray,
                     fontSize = 12.sp,
                     modifier = Modifier.align(Alignment.End)
@@ -107,15 +116,22 @@ fun DetalleEncuestaScreen(
                 }
             }
         }
+
+        if (uiState.error != null) {
+            Snackbar(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(text = uiState.error ?: "")
+            }
+        }
     }
 }
 
 @Composable
-fun OpcionEncuesta(
+fun OpcionEncuestaItem(
     texto: String,
     votos: Int,
     porcentaje: Float,
-    isSelected: Boolean,
     onClick: () -> Unit = {}
 ) {
     Box(
@@ -129,7 +145,7 @@ fun OpcionEncuesta(
                 .fillMaxWidth(porcentaje)
                 .fillMaxHeight()
                 .background(
-                    color = if (isSelected) Color(0xFF00C853).copy(alpha = 0.3f) else Color.Transparent,
+                    color = Color(0xFF00C853).copy(alpha = 0.3f),
                     shape = RoundedCornerShape(28.dp)
                 )
         )
@@ -148,14 +164,8 @@ fun OpcionEncuesta(
                     modifier = Modifier
                         .size(24.dp)
                         .background(
-                            color = if (isSelected) Color(0xFF00C853) else Color.Transparent,
-                            shape = CircleShape
-                        )
-                        .then(
-                            if (!isSelected) Modifier.background(
-                                Color.Gray.copy(alpha = 0.3f),
-                                CircleShape
-                            ) else Modifier
+                            Color.Gray.copy(alpha = 0.3f),
+                            CircleShape
                         )
                 )
 

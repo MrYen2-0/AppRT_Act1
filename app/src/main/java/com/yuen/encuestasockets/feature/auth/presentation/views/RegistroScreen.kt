@@ -19,7 +19,7 @@ import com.yuen.encuestasockets.feature.auth.presentation.viewmodel.AuthViewMode
 @Composable
 fun RegistroScreen(
     viewModel: AuthViewModel,
-    onRegistroSuccess: (String) -> Unit,
+    onRegistroSuccess: (String, Int) -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()

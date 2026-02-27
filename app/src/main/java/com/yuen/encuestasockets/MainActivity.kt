@@ -10,10 +10,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import com.yuen.encuestasockets.core.di.ViewModelFactory
 import com.yuen.encuestasockets.core.navigation.AppNavigation
 import com.yuen.encuestasockets.core.ui.theme.EncuestaSocketsTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,10 +34,5 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun EncuestaSocketsApp(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-    val viewModelFactory = ViewModelFactory()
-
-    AppNavigation(
-        navController = navController,
-        viewModelFactory = viewModelFactory
-    )
+    AppNavigation(navController = navController)
 }
