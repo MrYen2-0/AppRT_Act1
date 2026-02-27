@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class UsuarioResponse(
     val id: Int,
     val username: String,
-    val created_at: String
+    val creado_en: String
 )
 
 @Serializable
@@ -20,7 +20,10 @@ data class LoginResponse(
     val message: String,
     val usuario: UsuarioResponse
 )
-
+@Serializable
+data class TokenResponse(
+    val access_token: String
+)
 @Serializable
 data class ErrorResponse(
     val detail: String

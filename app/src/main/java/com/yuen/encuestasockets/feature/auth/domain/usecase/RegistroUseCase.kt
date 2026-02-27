@@ -4,25 +4,23 @@ import com.yuen.encuestasockets.feature.auth.domain.model.Usuario
 import com.yuen.encuestasockets.feature.auth.domain.repository.AuthRepository
 import javax.inject.Inject
 
-class RegistroUseCase @Inject constructor(private val repository: AuthRepository) {
+class RegistroUseCase @Inject constructor(
+    private val repository: AuthRepository
+) {
 
-    suspend operator fun invoke(username: String): Result<Usuario> {
-        if (username.isBlank()) {
-            return Result.failure(Exception("El nombre de usuario no puede estar vacío"))
+    suspend operator fun invoke(
+        username: String,
+        password: String
+    ): Result<Usuario> {
+
+        if (username.isBlank() || password.isBlank()) {
+            return Result.failure(Exception("Campos vacíos"))
         }
 
-        if (username.length < 3) {
-            return Result.failure(Exception("El nombre de usuario debe tener al menos 3 caracteres"))
+        if (password.length < 4) {
+            return Result.failure(Exception("La contraseña es muy corta"))
         }
 
-        if (username.length > 50) {
-            return Result.failure(Exception("El nombre de usuario no puede tener más de 50 caracteres"))
-        }
-
-        if (!username.matches(Regex("^[a-zA-Z0-9_-]+$"))) {
-            return Result.failure(Exception("El nombre de usuario solo puede contener letras, números, guiones y guiones bajos"))
-        }
-
-        return repository.registro(username)
+        return repository.registro(username, password)
     }
 }

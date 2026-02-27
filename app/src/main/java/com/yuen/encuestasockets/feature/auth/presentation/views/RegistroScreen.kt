@@ -63,24 +63,16 @@ fun RegistroScreen(
             }
         )
 
-        if (uiState.error != null) {
+        uiState.error?.let {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = uiState.error ?: "",
-                color = Color.Red,
-                fontSize = 12.sp
-            )
+            Text(text = it, color = Color.Red, fontSize = 12.sp)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {
-                viewModel.registro(onSuccess = onRegistroSuccess)
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF00C853)
-            ),
+            onClick = { viewModel.registro(onRegistroSuccess) },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -88,10 +80,7 @@ fun RegistroScreen(
             enabled = !uiState.isLoading
         ) {
             if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    color = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
             } else {
                 Text(
                     text = "Registrarse",
@@ -103,10 +92,7 @@ fun RegistroScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(
-            onClick = onNavigateToLogin,
-            enabled = !uiState.isLoading
-        ) {
+        TextButton(onClick = onNavigateToLogin, enabled = !uiState.isLoading) {
             Text(
                 text = "¿Ya tienes cuenta? Inicia sesión",
                 color = Color(0xFF00C853),

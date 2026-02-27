@@ -23,7 +23,7 @@ fun AppNavigation(navController: NavHostController) {
             val viewModel: AuthViewModel = hiltViewModel()
             LoginScreen(
                 viewModel = viewModel,
-                onLoginSuccess = { username, userId ->
+                onLoginSuccess = { username: String, userId: Int ->
                     navController.navigate(Screen.EncuestasList.createRoute(username, userId)) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }

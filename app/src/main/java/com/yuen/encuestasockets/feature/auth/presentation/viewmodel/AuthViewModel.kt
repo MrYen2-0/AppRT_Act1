@@ -8,84 +8,70 @@ import com.yuen.encuestasockets.feature.auth.domain.usecase.RegistroUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AuthUiState(
     val username: String = "",
+    val password: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
-    val usuario: Usuario? = null
+    val usuario: Usuario? = null,
+    val token: String? = null
 )
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val registroUseCase: RegistroUseCase,
-    private val loginUseCase: LoginUseCase
+    private val loginUseCase: LoginUseCase,
+    private val registroUseCase: RegistroUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
-    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<AuthUiState> = _uiState
 
     fun onUsernameChange(username: String) {
-        _uiState.value = _uiState.value.copy(
-            username = username,
-            error = null
-        )
+        _uiState.value = _uiState.value.copy(username = username, error = null)
+    }
+
+    fun onPasswordChange(password: String) {
+        _uiState.value = _uiState.value.copy(password = password, error = null)
+    }
+
+    fun login(onSuccess: (String) -> Unit) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val result = loginUseCase(
+                _uiState.value.username.trim(),
+                _uiState.value.password.trim()
+            )
+            result.fold(
+                onSuccess = { token ->
+                    _uiState.value = _uiState.value.copy(isLoading = false, token = token)
+                    onSuccess(token)
+                },
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = it.message)
+                }
+            )
+        }
     }
 
     fun registro(onSuccess: (String, Int) -> Unit) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-
-            val result = registroUseCase(_uiState.value.username.trim())
-
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val result = registroUseCase(
+                _uiState.value.username.trim(),
+                _uiState.value.password.trim()
+            )
             result.fold(
                 onSuccess = { usuario ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        usuario = usuario,
-                        error = null
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, usuario = usuario)
                     onSuccess(usuario.username, usuario.id)
                 },
-                onFailure = { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Error desconocido"
-                    )
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = it.message)
                 }
             )
         }
-    }
-
-    fun login(onSuccess: (String, Int) -> Unit) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-
-            val result = loginUseCase(_uiState.value.username.trim())
-
-            result.fold(
-                onSuccess = { usuario ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        usuario = usuario,
-                        error = null
-                    )
-                    onSuccess(usuario.username, usuario.id)
-                },
-                onFailure = { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Error desconocido"
-                    )
-                }
-            )
-        }
-    }
-
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
     }
 }
