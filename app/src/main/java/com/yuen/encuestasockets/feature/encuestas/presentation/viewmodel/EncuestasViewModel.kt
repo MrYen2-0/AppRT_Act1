@@ -1,11 +1,15 @@
 package com.yuen.encuestasockets.feature.encuestas.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.yuen.encuestasockets.feature.encuestas.domain.entities.Encuesta
-import com.yuen.encuestasockets.feature.encuestas.domain.entities.OpcionEncuesta
+import com.yuen.encuestasockets.feature.encuestas.domain.usecase.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class EncuestasUiState(
     val encuestas: List<Encuesta> = emptyList(),
@@ -21,7 +25,15 @@ data class CrearEncuestaUiState(
     val error: String? = null
 )
 
-class EncuestasViewModel : ViewModel() {
+@HiltViewModel
+class EncuestasViewModel @Inject constructor(
+    private val getEncuestasUseCase: GetEncuestasUseCase,
+    private val getEncuestaUseCase: GetEncuestaUseCase,
+    private val crearEncuestaUseCase: CrearEncuestaUseCase,
+    private val votarUseCase: VotarUseCase,
+    private val observarVotosUseCase: ObservarVotosUseCase
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(EncuestasUiState())
     val uiState: StateFlow<EncuestasUiState> = _uiState.asStateFlow()
 
@@ -30,64 +42,100 @@ class EncuestasViewModel : ViewModel() {
 
     init {
         cargarEncuestas()
+        observarVotosWebSocket()
     }
 
-    private fun cargarEncuestas() {
-        val encuestasMock = listOf(
-            Encuesta(
-                id = 1,
-                titulo = "Encuesta",
-                opciones = listOf(
-                    OpcionEncuesta(1, "Algo", 0),
-                    OpcionEncuesta(2, "o asi", 0),
-                    OpcionEncuesta(3, "Hola", 0)
-                ),
-                creador = "usuario1",
-                timestamp = "1:26 p.m."
-            ),
-            Encuesta(
-                id = 2,
-                titulo = "Encuesta 2",
-                opciones = listOf(
-                    OpcionEncuesta(1, "Opción A", 3),
-                    OpcionEncuesta(2, "Opción B", 5)
-                ),
-                creador = "usuario2",
-                timestamp = "2:15 p.m."
+    fun cargarEncuestas() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            getEncuestasUseCase().fold(
+                onSuccess = { encuestas ->
+                    _uiState.value = _uiState.value.copy(
+                        encuestas = encuestas,
+                        isLoading = false
+                    )
+                },
+                onFailure = { exception ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = exception.message ?: "Error al cargar encuestas"
+                    )
+                }
             )
-        )
-
-        _uiState.value = _uiState.value.copy(encuestas = encuestasMock)
+        }
     }
 
     fun cargarEncuesta(encuestaId: Int) {
-        val encuesta = _uiState.value.encuestas.find { it.id == encuestaId }
-        _uiState.value = _uiState.value.copy(encuestaSeleccionada = encuesta)
-    }
-
-    fun votarOpcion(opcionId: Int, username: String) {
-        val encuesta = _uiState.value.encuestaSeleccionada ?: return
-
-        val opcionesActualizadas = encuesta.opciones.map { opcion ->
-            if (opcion.id == opcionId) {
-                if (opcion.votantes.contains(username)) {
-                    opcion.copy(
-                        votos = opcion.votos - 1,
-                        votantes = opcion.votantes - username
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            getEncuestaUseCase(encuestaId).fold(
+                onSuccess = { encuesta ->
+                    _uiState.value = _uiState.value.copy(
+                        encuestaSeleccionada = encuesta,
+                        isLoading = false
                     )
-                } else {
-                    opcion.copy(
-                        votos = opcion.votos + 1,
-                        votantes = opcion.votantes + username
+                },
+                onFailure = { exception ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = exception.message ?: "Error al cargar encuesta"
                     )
                 }
-            } else {
-                opcion
+            )
+        }
+    }
+
+    fun votarOpcion(opcionId: Int, usuarioId: Int) {
+        viewModelScope.launch {
+            votarUseCase(opcionId, usuarioId).fold(
+                onSuccess = {
+                    val encuesta = _uiState.value.encuestaSeleccionada
+                    if (encuesta != null) {
+                        cargarEncuesta(encuesta.id)
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.value = _uiState.value.copy(
+                        error = exception.message ?: "Error al votar"
+                    )
+                }
+            )
+        }
+    }
+
+    private fun observarVotosWebSocket() {
+        viewModelScope.launch {
+            try {
+                observarVotosUseCase().collect { (opcionId, _) ->
+                    val encuestaActual = _uiState.value.encuestaSeleccionada
+                    if (encuestaActual != null) {
+                        val opcionesActualizadas = encuestaActual.opciones.map { opcion ->
+                            if (opcion.id == opcionId) {
+                                opcion.copy(votos = opcion.votos + 1)
+                            } else {
+                                opcion
+                            }
+                        }
+                        _uiState.value = _uiState.value.copy(
+                            encuestaSeleccionada = encuestaActual.copy(opciones = opcionesActualizadas)
+                        )
+                    }
+                    val encuestasActualizadas = _uiState.value.encuestas.map { encuesta ->
+                        val opcionesActualizadas = encuesta.opciones.map { opcion ->
+                            if (opcion.id == opcionId) {
+                                opcion.copy(votos = opcion.votos + 1)
+                            } else {
+                                opcion
+                            }
+                        }
+                        encuesta.copy(opciones = opcionesActualizadas)
+                    }
+                    _uiState.value = _uiState.value.copy(encuestas = encuestasActualizadas)
+                }
+            } catch (_: Exception) {
+                // WebSocket desconectado
             }
         }
-
-        val encuestaActualizada = encuesta.copy(opciones = opcionesActualizadas)
-        _uiState.value = _uiState.value.copy(encuestaSeleccionada = encuestaActualizada)
     }
 
     fun onTituloChange(titulo: String) {
@@ -113,37 +161,30 @@ class EncuestasViewModel : ViewModel() {
         }
     }
 
-    fun crearEncuesta(username: String, onSuccess: () -> Unit) {
+    fun crearEncuesta(onSuccess: () -> Unit) {
         val titulo = _crearUiState.value.titulo.trim()
         val opciones = _crearUiState.value.opciones.map { it.trim() }
 
-        if (titulo.isBlank()) {
-            _crearUiState.value = _crearUiState.value.copy(error = "El título no puede estar vacío")
-            return
-        }
-
-        if (opciones.any { it.isBlank() }) {
-            _crearUiState.value = _crearUiState.value.copy(error = "Todas las opciones deben tener texto")
-            return
-        }
-
         _crearUiState.value = _crearUiState.value.copy(isCreating = true, error = null)
 
-        val nuevaEncuesta = Encuesta(
-            id = _uiState.value.encuestas.size + 1,
-            titulo = titulo,
-            opciones = opciones.mapIndexed { index, texto ->
-                OpcionEncuesta(index + 1, texto, 0)
-            },
-            creador = username,
-            timestamp = "Ahora"
-        )
+        viewModelScope.launch {
+            crearEncuestaUseCase(titulo, opciones).fold(
+                onSuccess = {
+                    _crearUiState.value = CrearEncuestaUiState()
+                    cargarEncuestas()
+                    onSuccess()
+                },
+                onFailure = { exception ->
+                    _crearUiState.value = _crearUiState.value.copy(
+                        isCreating = false,
+                        error = exception.message ?: "Error al crear encuesta"
+                    )
+                }
+            )
+        }
+    }
 
-        val encuestasActualizadas = _uiState.value.encuestas + nuevaEncuesta
-        _uiState.value = _uiState.value.copy(encuestas = encuestasActualizadas)
-
-        _crearUiState.value = CrearEncuestaUiState()
-
-        onSuccess()
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }

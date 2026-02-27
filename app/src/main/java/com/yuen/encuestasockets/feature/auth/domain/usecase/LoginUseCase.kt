@@ -2,8 +2,9 @@ package com.yuen.encuestasockets.feature.auth.domain.usecase
 
 import com.yuen.encuestasockets.feature.auth.domain.model.Usuario
 import com.yuen.encuestasockets.feature.auth.domain.repository.AuthRepository
+import javax.inject.Inject
 
-class LoginUseCase(private val repository: AuthRepository) {
+class LoginUseCase @Inject constructor(private val repository: AuthRepository) {
 
     suspend operator fun invoke(username: String): Result<Usuario> {
         if (username.isBlank()) {

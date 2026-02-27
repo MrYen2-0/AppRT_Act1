@@ -1,13 +1,12 @@
 package com.yuen.encuestasockets.core.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.yuen.encuestasockets.core.di.ViewModelFactory
 import com.yuen.encuestasockets.feature.auth.presentation.views.LoginScreen
 import com.yuen.encuestasockets.feature.auth.presentation.views.RegistroScreen
 import com.yuen.encuestasockets.feature.auth.presentation.viewmodel.AuthViewModel
@@ -15,20 +14,17 @@ import com.yuen.encuestasockets.feature.encuestas.presentation.views.*
 import com.yuen.encuestasockets.feature.encuestas.presentation.viewmodel.EncuestasViewModel
 
 @Composable
-fun AppNavigation(
-    navController: NavHostController,
-    viewModelFactory: ViewModelFactory
-) {
+fun AppNavigation(navController: NavHostController) {
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route
     ) {
         composable(Screen.Login.route) {
-            val viewModel: AuthViewModel = viewModel(factory = viewModelFactory)
+            val viewModel: AuthViewModel = hiltViewModel()
             LoginScreen(
                 viewModel = viewModel,
-                onLoginSuccess = { username ->
-                    navController.navigate(Screen.EncuestasList.createRoute(username)) {
+                onLoginSuccess = { username, userId ->
+                    navController.navigate(Screen.EncuestasList.createRoute(username, userId)) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
@@ -39,11 +35,11 @@ fun AppNavigation(
         }
 
         composable(Screen.Registro.route) {
-            val viewModel: AuthViewModel = viewModel(factory = viewModelFactory)
+            val viewModel: AuthViewModel = hiltViewModel()
             RegistroScreen(
                 viewModel = viewModel,
-                onRegistroSuccess = { username ->
-                    navController.navigate(Screen.EncuestasList.createRoute(username)) {
+                onRegistroSuccess = { username, userId ->
+                    navController.navigate(Screen.EncuestasList.createRoute(username, userId)) {
                         popUpTo(Screen.Registro.route) { inclusive = true }
                     }
                 },
@@ -55,15 +51,19 @@ fun AppNavigation(
 
         composable(
             route = Screen.EncuestasList.route,
-            arguments = listOf(navArgument("username") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("username") { type = NavType.StringType },
+                navArgument("userId") { type = NavType.IntType }
+            )
         ) { backStackEntry ->
             val username = backStackEntry.arguments?.getString("username") ?: ""
-            val viewModel: EncuestasViewModel = viewModel(factory = viewModelFactory)
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            val viewModel: EncuestasViewModel = hiltViewModel()
             EncuestasListScreen(
                 username = username,
                 viewModel = viewModel,
                 onEncuestaClick = { encuestaId ->
-                    navController.navigate(Screen.DetalleEncuesta.createRoute(encuestaId))
+                    navController.navigate(Screen.DetalleEncuesta.createRoute(encuestaId, userId))
                 },
                 onCrearEncuesta = {
                     navController.navigate(Screen.CrearEncuesta.route)
@@ -73,12 +73,17 @@ fun AppNavigation(
 
         composable(
             route = Screen.DetalleEncuesta.route,
-            arguments = listOf(navArgument("encuestaId") { type = NavType.IntType })
+            arguments = listOf(
+                navArgument("encuestaId") { type = NavType.IntType },
+                navArgument("userId") { type = NavType.IntType }
+            )
         ) { backStackEntry ->
             val encuestaId = backStackEntry.arguments?.getInt("encuestaId") ?: 0
-            val viewModel: EncuestasViewModel = viewModel(factory = viewModelFactory)
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            val viewModel: EncuestasViewModel = hiltViewModel()
             DetalleEncuestaScreen(
                 encuestaId = encuestaId,
+                usuarioId = userId,
                 viewModel = viewModel,
                 onBack = {
                     navController.popBackStack()
@@ -87,7 +92,7 @@ fun AppNavigation(
         }
 
         composable(Screen.CrearEncuesta.route) {
-            val viewModel: EncuestasViewModel = viewModel(factory = viewModelFactory)
+            val viewModel: EncuestasViewModel = hiltViewModel()
             CrearEncuestaScreen(
                 viewModel = viewModel,
                 onBack = {

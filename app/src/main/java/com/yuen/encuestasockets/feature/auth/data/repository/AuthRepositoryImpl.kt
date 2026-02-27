@@ -3,8 +3,9 @@ package com.yuen.encuestasockets.feature.auth.data.repository
 import com.yuen.encuestasockets.feature.auth.data.remote.AuthApi
 import com.yuen.encuestasockets.feature.auth.domain.model.Usuario
 import com.yuen.encuestasockets.feature.auth.domain.repository.AuthRepository
+import javax.inject.Inject
 
-class AuthRepositoryImpl(private val api: AuthApi) : AuthRepository {
+class AuthRepositoryImpl @Inject constructor(private val api: AuthApi) : AuthRepository {
 
     override suspend fun registro(username: String): Result<Usuario> {
         return api.registro(username).map { response ->

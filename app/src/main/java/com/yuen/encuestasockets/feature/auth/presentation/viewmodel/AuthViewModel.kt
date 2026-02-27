@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.yuen.encuestasockets.feature.auth.domain.model.Usuario
 import com.yuen.encuestasockets.feature.auth.domain.usecase.LoginUseCase
 import com.yuen.encuestasockets.feature.auth.domain.usecase.RegistroUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class AuthUiState(
     val username: String = "",
@@ -17,7 +19,8 @@ data class AuthUiState(
     val usuario: Usuario? = null
 )
 
-class AuthViewModel(
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val registroUseCase: RegistroUseCase,
     private val loginUseCase: LoginUseCase
 ) : ViewModel() {
@@ -32,7 +35,7 @@ class AuthViewModel(
         )
     }
 
-    fun registro(onSuccess: (String) -> Unit) {
+    fun registro(onSuccess: (String, Int) -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
@@ -45,7 +48,7 @@ class AuthViewModel(
                         usuario = usuario,
                         error = null
                     )
-                    onSuccess(usuario.username)
+                    onSuccess(usuario.username, usuario.id)
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
@@ -57,7 +60,7 @@ class AuthViewModel(
         }
     }
 
-    fun login(onSuccess: (String) -> Unit) {
+    fun login(onSuccess: (String, Int) -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
@@ -70,7 +73,7 @@ class AuthViewModel(
                         usuario = usuario,
                         error = null
                     )
-                    onSuccess(usuario.username)
+                    onSuccess(usuario.username, usuario.id)
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
