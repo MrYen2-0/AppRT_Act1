@@ -3,14 +3,15 @@ package com.yuen.encuestasockets.feature.auth.presentation.views
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yuen.encuestasockets.feature.auth.presentation.viewmodel.AuthViewModel
@@ -41,6 +42,7 @@ fun RegistroScreen(
 
         Spacer(modifier = Modifier.height(48.dp))
 
+        // Campo de usuario
         OutlinedTextField(
             value = uiState.username,
             onValueChange = { viewModel.onUsernameChange(it) },
@@ -57,6 +59,33 @@ fun RegistroScreen(
             supportingText = {
                 Text(
                     text = "Mínimo 3 caracteres, solo letras, números, - y _",
+                    color = Color.Gray,
+                    fontSize = 11.sp
+                )
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Campo de contraseña
+        OutlinedTextField(
+            value = uiState.password,
+            onValueChange = { viewModel.onPasswordChange(it) },
+            label = { Text("Contraseña", color = Color.Gray) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = Color(0xFF00C853),
+                unfocusedBorderColor = Color.Gray
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            isError = uiState.error != null,
+            enabled = !uiState.isLoading,
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            supportingText = {
+                Text(
+                    text = "Mínimo 6 caracteres",
                     color = Color.Gray,
                     fontSize = 11.sp
                 )
